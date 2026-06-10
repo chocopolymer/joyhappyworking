@@ -1,0 +1,119 @@
+document.addEventListener("DOMContentLoaded", () => {
+
+    const incoterm = document.getElementById("incoterm");
+    const location = document.getElementById("location");
+    const packageType = document.getElementById("package");
+    const palletGroup = document.getElementById("palletGroup");
+
+    // FOB 선택 시 Busan 자동 입력
+    incoterm.addEventListener("change", () => {
+        if (incoterm.value === "FOB" && location.value.trim() === "") {
+            location.value = "Busan";
+        }
+    });
+
+    // BULK(ISO)는 Pallet 숨김
+    packageType.addEventListener("change", () => {
+        if (packageType.value === "BULK (ISO)") {
+            palletGroup.style.display = "none";
+        } else {
+            palletGroup.style.display = "block";
+        }
+    });
+
+    document.getElementById("generateBtn").addEventListener("click", generateQuotation);
+
+});
+
+function generateQuotation() {
+
+    const product = document.getElementById("product").value;
+    const packageType = document.getElementById("package").value;
+    const pallet = document.getElementById("pallet").value;
+    const incoterm = document.getElementById("incoterm").value;
+    const location = document.getElementById("location").value;
+    const currency = document.getElementById("currency").value;
+    const price = document.getElementById("price").value;
+    const unit = document.getElementById("unit").value;
+    const shipment = document.getElementById("shipment").value;
+    const payment = document.getElementById("payment").value;
+    const quantity = document.getElementById("quantity").value;
+    const validity = document.getElementById("validity").value;
+    const remark = document.getElementById("remark").value;
+
+    let packing = packageType;
+
+    if (packageType !== "BULK (ISO)") {
+        packing += " " + pallet;
+    }
+
+    const priceText = `${currency} ${Number(price).toLocaleString()} / ${unit}`;
+    const incotermText = `${incoterm} ${location}`;
+
+    const quotationNo = generateQuotationNo();
+
+    let validityText = "";
+
+    if (validity) {
+        const date = new Date(validity);
+
+        validityText = date.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric"
+        });
+    }
+
+    const html = `
+        <h3>Quotation No. : ${quotationNo}</h3>
+
+        <table class="result-table">
+            <tr><td>Product</td><td>${product}</td></tr>
+            <tr><td>Packing</td><td>${packing}</td></tr>
+            <tr><td>Incoterms</td><td>${incotermText}</td></tr>
+            <tr><td>Price</td><td>${priceText}</td></tr>
+            <tr><td>Shipment (ETD)</td><td>${shipment}</td></tr>
+            <tr><td>Payment</td><td>${payment}</td></tr>
+            <tr><td>Quantity</td><td>${quantity}</td></tr>
+            <tr><td>Validity</td><td>${validityText}</td></tr>
+            <tr><td>Remark</td><td>${remark}</td></tr>
+        </table>
+    `;
+
+    let oldResult = document.getElementById("quotationResult");
+
+    if (oldResult) {
+        oldResult.remove();
+    }
+
+    const resultDiv = document.createElement("div");
+    resultDiv.id = "quotationResult";
+    resultDiv.innerHTML = html;
+
+    document.querySelector(".container").appendChild(resultDiv);
+}
+
+function generateQuotationNo() {
+
+    const today = new Date();
+
+    const y = today.getFullYear();
+
+    const m = String(today.getMonth() + 1).padStart(2, "0");
+
+    const d = String(today.getDate()).padStart(2, "0");
+
+    const dateKey = `${y}${m}${d}`;
+
+    let counter = localStorage.getItem(dateKey);
+
+    if (!counter) {
+        counter = 1;
+    } else {
+        counter = parseInt(counter) + 1;
+    }
+
+    localStorage.setItem(dateKey, counter);
+
+    return `QT-${dateKey}-${String(counter).padStart(3, "0")}`;
+}

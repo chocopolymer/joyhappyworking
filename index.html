@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Quotation Generator</title>
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+<style>
+body{
+    font-family:Arial,sans-serif;
+    background:#f4f4f4;
+    padding:20px;
+}
+
+.container{
+    max-width:700px;
+    margin:auto;
+    background:white;
+    padding:20px;
+    border-radius:10px;
+}
+
+.form-group{
+    margin-bottom:15px;
+}
+
+label{
+    display:block;
+    margin-bottom:5px;
+    font-weight:bold;
+}
+
+input,select,textarea{
+    width:100%;
+    padding:10px;
+    box-sizing:border-box;
+}
+
+button{
+    width:100%;
+    padding:12px;
+    margin-top:10px;
+    cursor:pointer;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:30px;
+}
+
+td{
+    border:1px solid #000;
+    padding:8px;
+}
+
+td:first-child{
+    width:35%;
+    font-weight:bold;
+}
+</style>
+
+</head>
+<body>
+
+<div id="loginBox" style="
+max-width:400px;
+margin:100px auto;
+background:white;
+padding:30px;
+border-radius:10px;
+text-align:center;
+">
+
+<h2>Quotation App</h2>
+
+<input
+type="password"
+id="password"
+placeholder="Enter Password">
+
+<br><br>
+
+<button onclick="login()">
+Login
+</button>
+
+</div>
+
+<div class="container" id="app" style="display:none;">
+
+<h2>Quotation Generator</h2>
+
+<div class="form-group">
+<label>Product</label>
+<input type="text" id="product">
+</div>
+
+<div class="form-group">
+<label>Package</label>
+<select id="package">
+<option>20kg Bag</option>
+<option>500kg Bag</option>
+<option>210kg 2nd PE Drum</option>
+<option>215kg 2nd PE Drum</option>
+<option>190kg Steel Drum</option>
+<option>200kg New Open Top Drum</option>
+<option>1000kg IBC</option>
+<option>1050kg 2nd IBC</option>
+<option>BULK (ISO)</option>
+</select>
+</div>
+
+<div class="form-group">
+<label>Pallet</label>
+<select id="pallet">
+<option>with Pallet</option>
+<option>without Pallet</option>
+</select>
+</div>
+
+<div class="form-group">
+<label>Incoterms</label>
+<select id="incoterm">
+<option>EXW</option>
+<option selected>FOB</option>
+<option>CFR</option>
+<option>CIF</option>
+<option>DDU</option>
+</select>
+</div>
+
+<div class="form-group">
+<label>Location</label>
+<input type="text" id="location" value="Busan">
+</div>
+
+<div class="form-group">
+<label>Currency</label>
+<select id="currency">
+<option>USD</option>
+<option>EUR</option>
+<option>KRW</option>
+<option>CNY</option>
+<option>JPY</option>
+</select>
+</div>
+
+<div class="form-group">
+<label>Price</label>
+<input type="number" id="price">
+</div>
+
+<div class="form-group">
+<label>Unit</label>
+<select id="unit">
+<option>MT</option>
+<option>KG</option>
+</select>
+</div>
+
+<div class="form-group">
+<label>Shipment (ETD)</label>
+<input type="text" id="shipment" placeholder="JUL, 2026">
+</div>
+
+<div class="form-group">
+<label>Payment</label>
+<input list="paymentList" id="payment">
+
+<datalist id="paymentList">
+<option value="T/T Advance">
+<option value="T/T 30 Days">
+<option value="L/C at Sight">
+<option value="T/T against COPY of BL">
+</datalist>
+</div>
+
+<div class="form-group">
+<label>Quantity</label>
+<input type="text" id="quantity">
+</div>
+
+<div class="form-group">
+<label>Validity</label>
+<input type="date" id="validity">
+</div>
+
+<div class="form-group">
+<label>Remark</label>
+<textarea id="remark"></textarea>
+</div>
+
+<button onclick="generateQuotation()">
+Generate Quotation
+</button>
+<button onclick="savePNG()">
+Save as PNG
+</button>
+<div id="result"></div>
+
+</div>
+
+<script>
+function login(){
+
+    const pw = document.getElementById("password").value;
+
+    if(pw === "Lg10004"){
+
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("app").style.display = "block";
+
+    }else{
+
+        alert("Wrong Password");
+
+    }
+
+}
+function generateQuotation(){
+
+let product=document.getElementById('product').value;
+
+let pack=document.getElementById('package').value;
+let pallet=document.getElementById('pallet').value;
+
+let packing=pack;
+
+if(pack!=="BULK (ISO)"){
+    packing=pack+" "+pallet;
+}
+let incoterm=document.getElementById('incoterm').value;
+let location=document.getElementById('location').value;
+
+let currency=document.getElementById('currency').value;
+let price=document.getElementById('price').value;
+let unit=document.getElementById('unit').value;
+
+let shipment=document.getElementById('shipment').value;
+let payment=document.getElementById('payment').value;
+let quantity=document.getElementById('quantity').value;
+let validity=document.getElementById('validity').value;
+let remark=document.getElementById('remark').value;
+
+let quoteNo="LG-"+new Date().getTime();
+
+document.getElementById('result').innerHTML=`
+<table>
+<tr>
+<td>Quotation No.</td>
+<td>${quoteNo}</td>
+</tr>
+
+<tr>
+<td>Product</td>
+<td>${product}</td>
+</tr>
+
+<tr>
+<td>Packing</td>
+<td>${packing}</td>
+</tr>
+
+<tr>
+<td>Incoterms</td>
+<td>${incoterm} ${location}</td>
+</tr>
+
+<tr>
+<td>Price</td>
+<td>${currency} ${price} / ${unit}</td>
+</tr>
+
+<tr>
+<td>Shipment (ETD)</td>
+<td>${shipment}</td>
+</tr>
+
+<tr>
+<td>Payment</td>
+<td>${payment}</td>
+</tr>
+
+<tr>
+<td>Quantity</td>
+<td>${quantity}</td>
+</tr>
+
+<tr>
+<td>Validity</td>
+<td>${validity}</td>
+</tr>
+
+<tr>
+<td>Remark</td>
+<td>${remark}</td>
+</tr>
+
+</table>
+`;
+
+}
+
+function savePNG(){
+
+    const target = document.getElementById("result");
+
+    if(target.innerHTML.trim() === ""){
+        alert("Please generate quotation first.");
+        return;
+    }
+
+    html2canvas(target).then(canvas => {
+
+        const link = document.createElement("a");
+
+        link.download = "quotation.png";
+
+        link.href = canvas.toDataURL("image/png");
+
+        link.click();
+
+    });
+
+}
+</script>
+
+</body>
+</html>
