@@ -54,6 +54,7 @@ td{
     border:1px solid #000;
     padding:8px;
 }
+function login(){
 
 td:first-child{
     width:35%;
@@ -90,7 +91,20 @@ Login
 
 <div class="container" id="app" style="display:none;">
 
+<div id="quotationTab">
+
 <h2>Quotation Generator</h2>
+
+<div style="margin-bottom:20px;">
+<button onclick="showTab('quotation')">
+Quotation
+</button>
+
+<button onclick="showTab('las')">
+LAS Calculator
+</button>
+
+</div>
 
 <div class="form-group">
 <label>Product</label>
@@ -198,19 +212,279 @@ Generate Quotation
 <button onclick="savePNG()">
 Save as PNG
 </button>
+
 <div id="result"></div>
+
+</div>
+<div id="lasTab" style="display:none;">
+
+<h2>LAS Calculator</h2>
+
+<div class="form-group">
+<label>Product</label>
+<input type="text" id="lasProduct" value="ELOTANT LAS100">
+</div>
+
+<div class="form-group">
+<label>Package</label>
+<select id="lasPackage">
+
+<option>20kg Bag</option>
+<option>500kg Bag</option>
+<option>210kg 2nd PE Drum</option>
+<option>215kg 2nd PE Drum</option>
+<option>190kg Steel Drum</option>
+<option>200kg New Open Top Drum</option>
+<option>1000kg IBC</option>
+<option>1050kg 2nd IBC</option>
+<option>BULK (ISO)</option>
+
+</select>
+</div>
+
+<div class="form-group">
+<label>POD</label>
+<input
+list="podList"
+id="pod"
+placeholder="Type POD"
+autocomplete="off">
+
+<datalist id="podList">
+</datalist>
+
+</div>
+
+
+
+
+
+
+
+<div class="form-group">
+<label>FOB Price (USD/MT)</label>
+<input type="number" id="fobPrice">
+</div>
+
+<button onclick="calculateLAS()">
+Calculate LAS Price
+</button>
+
+<div id="lasResult"></div>
+
+<button onclick="useQuotationPrice()">
+Generate Quotation
+</button>
+
+
+</div>
 
 </div>
 
 <script>
+let freightData = {};
+async function loadFreightData(){
+
+    const url =
+    "https://opensheet.elk.sh/1KsZo5VXifPt23RMDKaWAvWQK04g7QAIAOLpikCsBq_0/Sheet1";
+
+    const response =
+    await fetch(url);
+
+    const data = 
+    await response.json();
+
+    console.log(data);
+
+let podList =
+document.getElementById("podList");
+
+podList.innerHTML = "";
+
+    data.forEach(row => {
+
+        freightData[row.POD.toUpperCase()] = {
+
+    normal:Number(row.NORMAL),
+    iso:Number(row.ISO)
+
+};
+
+const option =
+        document.createElement("option");
+
+        option.value = row.POD;
+        option.textContent = row.POD;
+
+        podList.appendChild(option);
+
+    });
+
+    console.log(freightData);
+
+}
+
+function showTab(tab){
+
+    if(tab==="quotation"){
+
+        document.getElementById("quotationTab").style.display="block";
+        document.getElementById("lasTab").style.display="none";
+
+    }else{
+
+        document.getElementById("quotationTab").style.display="none";
+        document.getElementById("lasTab").style.display="block";
+
+    }
+
+}
+
+function calculateLAS(){
+
+
+const tonTable = {
+
+"20kg Bag":20.0,
+"500kg Bag":20.0,
+"210kg 2nd PE Drum":16.8,
+"215kg 2nd PE Drum":17.2,
+"190kg Steel Drum":15.2,
+"200kg New Open Top Drum":16.0,
+"1000kg IBC":18.0,
+"1050kg 2nd IBC":18.9,
+"BULK (ISO)":22.0
+
+};
+
+const freightTable = {
+
+"Hamburg":1500,
+"Rotterdam":1450,
+"Antwerp":1480,
+"Houston":2400
+
+}
+
+
+
+
+
+
+
+
+let pack =
+document.getElementById("lasPackage").value;
+window.lastPackage = pack;
+
+let pod =
+document.getElementById("pod").value.toUpperCase();
+
+window.lastPOD = pod;
+
+let fob =
+Number(document.getElementById("fobPrice").value);
+
+let ton =
+tonTable[pack];
+
+let freight;
+
+if(pack==="BULK (ISO)"){
+
+    freight =
+    freightData[pod].iso;
+
+}else{
+
+    freight =
+    freightData[pod].normal;
+
+}
+
+let freightPerTon =
+freight / ton;
+
+let actualPrice =
+fob + freightPerTon;
+
+let quotationPrice =
+Math.ceil(actualPrice / 5) * 5;
+
+window.lastQuotationPrice = quotationPrice;
+
+document.getElementById("lasResult").innerHTML=`
+
+<table>
+
+<tr>
+<td>TON/FCL</td>
+<td>${ton}</td>
+</tr>
+
+<tr>
+<td>Freight/FCL</td>
+<td>USD ${freight}</td>
+</tr>
+
+<tr>
+<td>Freight/MT</td>
+<td>USD ${freightPerTon.toFixed(2)}</td>
+</tr>
+
+<tr>
+<td>Actual Price</td>
+<td>USD ${actualPrice.toFixed(2)}/MT</td>
+</tr>
+
+<tr>
+<td>Quotation Price</td>
+<td><b>USD ${quotationPrice}/MT</b></td>
+</tr>
+
+</table>
+
+`;
+
+}
+
+function useQuotationPrice(){
+
+    alert(window.lastPackage);
+
+    document.getElementById("product").value =
+    "ELOTANT LAS100";
+
+    document.getElementById("currency").value =
+    "USD";
+
+    document.getElementById("unit").value =
+    "MT";
+
+    document.getElementById("price").value =
+    window.lastQuotationPrice;
+
+document.getElementById("package").value =
+window.lastPackage;
+
+document.getElementById("location").value =
+window.lastPOD;
+
+    showTab("quotation");
+
+}
+
 function login(){
 
-    const pw = document.getElementById("password").value;
+    const pw =
+    document.getElementById("password").value;
 
-    if(pw === "Lg10004"){
+    if(pw === "1004"){
 
         document.getElementById("loginBox").style.display = "none";
         document.getElementById("app").style.display = "block";
+
+        loadFreightData();
 
     }else{
 
@@ -219,6 +493,7 @@ function login(){
     }
 
 }
+
 function generateQuotation(){
 
 let product=document.getElementById('product').value;
